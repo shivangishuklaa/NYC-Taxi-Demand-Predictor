@@ -3,7 +3,7 @@ venv/
 env/
 
 # Trained models (large files)
-models/*.pkl
+models/rf_model.pkl
 
 # Jupyter checkpoints
 .ipynb_checkpoints/
