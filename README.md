@@ -9,6 +9,9 @@
 
 ---
 
+## 🌐 Live Demo
+👉 https://nyc-taxi-demand-predictor.onrender.com
+
 ## 📌 Problem Statement
 
 NYC taxi operators and dispatchers need to anticipate demand surges before they happen. This project builds a machine learning pipeline that predicts the number of taxi pickups in any of **40 geo-clusters** for any **10-minute time window**, enabling proactive fleet positioning.
