@@ -7,7 +7,12 @@
 ![FastAPI](https://img.shields.io/badge/FastAPI-0.11-teal?style=flat-square)
 ![R2](https://img.shields.io/badge/R²-0.965-brightgreen?style=flat-square)
 
+
+## 🌐 Live Demo
+👉 https://nyc-taxi-demand-predictor.onrender.com
+
 ---
+
 
 ## 📌 Problem Statement
 
@@ -215,4 +220,4 @@ nyc-taxi-demand-prediction/
 ## 👩‍💻 Author
 
 Made  by **Shivangi Shukla**  
-[GitHub](https://github.com/yourusername) · [LinkedIn](https://linkedin.com/in/yourusername)
+[GitHub](https://github.com/shivangishuklaa) · [LinkedIn](https://www.linkedin.com/in/shivangi-shukla-data-analyst/)
