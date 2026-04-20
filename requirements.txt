@@ -1,0 +1,12 @@
+streamlit
+xgboost
+lightgbm
+scikit-learn
+pandas
+numpy
+folium
+streamlit-folium
+fastapi
+uvicorn
+xgboost
+python-multipart

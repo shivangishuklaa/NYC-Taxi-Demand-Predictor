@@ -1,0 +1,23 @@
+# Virtual environment
+venv/
+env/
+
+# Trained models (large files)
+models/*.pkl
+
+# Jupyter checkpoints
+.ipynb_checkpoints/
+__pycache__/
+*.pyc
+
+# Data files (too large for GitHub)
+*.csv
+data/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
