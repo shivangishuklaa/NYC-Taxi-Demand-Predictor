@@ -220,4 +220,4 @@ nyc-taxi-demand-prediction/
 ## 👩‍💻 Author
 
 Made  by **Shivangi Shukla**  
-[GitHub](https://github.com/yourusername) · [LinkedIn](https://linkedin.com/in/yourusername)
+[GitHub](https://github.com/shivangishuklaa) · [LinkedIn](https://www.linkedin.com/in/shivangi-shukla-data-analyst/)
