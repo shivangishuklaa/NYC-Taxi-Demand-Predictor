@@ -115,6 +115,58 @@ select:focus,input[type=number]:focus{outline:none;border-color:var(--green);bac
 .map-stat-item{text-align:center}
 .map-stat-val{font-size:18px;font-weight:700;color:var(--green)}
 .map-stat-label{font-size:10px;color:var(--muted);font-weight:500}
+
+/* ── Mobile responsive ── */
+@media(max-width:768px){
+  body{overflow:auto}
+
+  header{padding:0 14px;height:52px}
+  .header-title{font-size:13px}
+  .header-sub{display:none}
+  .hbadge{font-size:10px;padding:3px 7px}
+
+  /* Stack sidebar on top, map below */
+  .layout{
+    grid-template-columns:1fr;
+    grid-template-rows:auto 380px;
+    height:auto;
+    overflow:visible;
+  }
+
+  .sidebar{
+    border-right:none;
+    border-bottom:1px solid var(--border);
+    overflow:visible;
+    max-height:none;
+  }
+  .sidebar-scroll{overflow:visible;padding:12px}
+
+  /* Map fills second row fully */
+  .layout > div:last-child{
+    position:relative;
+    height:380px;
+  }
+  #map{height:380px}
+
+  /* Map stats at bottom-left on mobile so it doesn't clip */
+  .map-stats{
+    bottom:12px;
+    right:8px;
+    left:8px;
+    gap:0;
+    justify-content:space-around;
+    padding:10px 8px;
+  }
+  .map-stat-val{font-size:15px}
+
+  /* Result section readable on mobile */
+  .result-num{font-size:38px}
+  .meta-grid{grid-template-columns:1fr 1fr}
+  .lag-grid{grid-template-columns:1fr 1fr}
+
+  /* Buttons full width already — just fix padding */
+  .btn-group{padding:10px 12px}
+}
 </style>
 </head>
 <body>
