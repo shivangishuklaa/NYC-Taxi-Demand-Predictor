@@ -7,10 +7,12 @@
 ![FastAPI](https://img.shields.io/badge/FastAPI-0.11-teal?style=flat-square)
 ![R2](https://img.shields.io/badge/R²-0.965-brightgreen?style=flat-square)
 
----
 
 ## 🌐 Live Demo
 👉 https://nyc-taxi-demand-predictor.onrender.com
+
+---
+
 
 ## 📌 Problem Statement
 
