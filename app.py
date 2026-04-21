@@ -138,30 +138,20 @@ html, body, [class*="css"] { font-family: 'DM Sans', sans-serif; }
 
 # ── Model loading (auto-download from Google Drive if not present) ────────────
 
-
 GDRIVE_FILES = {
     "models/xgb_model.pkl":    "1ppSv3GWX1Ha2WMi5mXmn7Xnx_qufogUc",
     "models/kmeans_zones.pkl": "18vYxo6eCoi7YChqWX-ZXxkWE8KoX8Wbo",
 }
 
 def download_models(timeout=60):
-    """Download model files from Google Drive if not already present.
-    
-    Args:
-        timeout: Download timeout in seconds (default: 60)
-    """
+    """Download model files from Google Drive if not already present."""
     os.makedirs("models", exist_ok=True)
     for local_path, file_id in GDRIVE_FILES.items():
         if not os.path.exists(local_path):
             try:
                 url = f"https://drive.google.com/uc?id={file_id}"
                 with st.spinner(f"⬇️ Downloading {os.path.basename(local_path)}..."):
-                    gdown.download(
-                        url, 
-                        local_path, 
-                        quiet=False,
-                        timeout=timeout
-                    )
+                    gdown.download(url, local_path, quiet=False, timeout=timeout)
                 st.success(f"✅ Downloaded {os.path.basename(local_path)}")
             except Exception as e:
                 st.error(f"❌ Failed to download {os.path.basename(local_path)}: {str(e)}")
@@ -238,12 +228,28 @@ def predict_all_zones(hour, dow, lag1, lag3, lag6, lag144):
         })
     return sorted(results, key=lambda x: x["prediction"], reverse=True)
 
+def time_tag_html(hour):
+    """Return HTML badge for time of day."""
+    if 7 <= hour <= 9:
+        return '<span class="time-tag time-rush">🌅 AM Rush</span>'
+    elif 17 <= hour <= 19:
+        return '<span class="time-tag time-rush">🌆 PM Rush</span>'
+    elif hour < 6 or hour >= 22:
+        return '<span class="time-tag time-night">🌙 Night</span>'
+    else:
+        return '<span class="time-tag time-day">☀️ Day</span>'
+
 
 # ── Sidebar ───────────────────────────────────────────────────────────────────
 with st.sidebar:
     st.markdown('<div class="sec-label">⏰ Time</div>', unsafe_allow_html=True)
-    hour = st.slider("Hour of Day", 0, 23, 9, label_visibility="collapsed")
-    dow = st.slider("Day of Week", 0, 6, 0, format_option=lambda x: DAYS[x], label_visibility="collapsed")
+    hour = st.slider("Hour of day", 0, 23, 8, label_visibility="collapsed")
+    st.markdown(
+        f'{time_tag_html(hour)} &nbsp;<code style="font-size:12px;background:#1e2130;'
+        f'padding:2px 8px;border-radius:6px;color:#94a3b8">{hour:02d}:00</code>',
+        unsafe_allow_html=True
+    )
+    dow = st.selectbox("Day of week", range(7), format_func=lambda x: DAYS[x], label_visibility="collapsed")
 
     st.markdown('<div class="sec-label">📍 Zone</div>', unsafe_allow_html=True)
     cluster_id = st.slider("Cluster ID", 0, N_ZONES - 1, 0, label_visibility="collapsed")
