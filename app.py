@@ -144,23 +144,51 @@ GDRIVE_FILES = {
     "models/kmeans_zones.pkl": "18vYxo6eCoi7YChqWX-ZXxkWE8KoX8Wbo",
 }
 
-def download_models():
-    """Download model files from Google Drive if not already present."""
+def download_models(timeout=60):
+    """Download model files from Google Drive if not already present.
+    
+    Args:
+        timeout: Download timeout in seconds (default: 60)
+    """
     os.makedirs("models", exist_ok=True)
     for local_path, file_id in GDRIVE_FILES.items():
         if not os.path.exists(local_path):
-            url = f"https://drive.google.com/uc?id={file_id}"
-            with st.spinner(f"⬇️ Downloading {os.path.basename(local_path)}..."):
-                gdown.download(url, local_path, quiet=False)
+            try:
+                url = f"https://drive.google.com/uc?id={file_id}"
+                with st.spinner(f"⬇️ Downloading {os.path.basename(local_path)}..."):
+                    gdown.download(
+                        url, 
+                        local_path, 
+                        quiet=False,
+                        timeout=timeout
+                    )
+                st.success(f"✅ Downloaded {os.path.basename(local_path)}")
+            except Exception as e:
+                st.error(f"❌ Failed to download {os.path.basename(local_path)}: {str(e)}")
+                st.error("Please check your internet connection and try refreshing the page.")
+                st.stop()
 
 @st.cache_resource
 def load_models():
-    download_models()
-    with open("models/xgb_model.pkl", "rb") as f:
-        xgb_model = pickle.load(f)
-    with open("models/kmeans_zones.pkl", "rb") as f:
-        kmeans = pickle.load(f)
-    return xgb_model, kmeans.cluster_centers_
+    """Load models from pickle files."""
+    try:
+        download_models()
+        with open("models/xgb_model.pkl", "rb") as f:
+            xgb_model = pickle.load(f)
+        with open("models/kmeans_zones.pkl", "rb") as f:
+            kmeans = pickle.load(f)
+        return xgb_model, kmeans.cluster_centers_
+    except Exception as e:
+        st.error(f"❌ Error loading models: {str(e)}")
+        st.stop()
+
+# Initialize session state
+if "mode" not in st.session_state:
+    st.session_state.mode = None
+if "result" not in st.session_state:
+    st.session_state.result = None
+if "all_results" not in st.session_state:
+    st.session_state.all_results = None
 
 xgb_model, cluster_centers = load_models()
 N_ZONES   = len(cluster_centers)
@@ -171,80 +199,51 @@ DAY_SHORT = ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"]
 # ── Feature builder ───────────────────────────────────────────────────────────
 def build_features(cluster_id, hour, dow, lag1, lag3, lag6, lag144):
     is_weekend      = 1 if dow >= 5 else 0
-    is_rush_am      = 1 if 7  <= hour <= 9  else 0
+    is_rush_am      = 1 if 7 <= hour <= 9 else 0
     is_rush_pm      = 1 if 17 <= hour <= 19 else 0
-    is_night        = 1 if (hour >= 22 or hour <= 5) else 0
-    bin_id          = 33 + (dow * 144) + (hour * 6)
-    center_lat      = float(cluster_centers[cluster_id][0])
-    center_lon      = float(cluster_centers[cluster_id][1])
-    rolling_mean_3  = (lag1 + lag3) / 2
-    rolling_mean_12 = (lag1 + lag3 + lag6 + lag144) / 4
-    return pd.DataFrame([{
-        "cluster_id": cluster_id, "bin_id": bin_id,
-        "hour_of_day": hour,      "day_of_week": dow,
-        "is_weekend": is_weekend, "is_rush_am": is_rush_am,
-        "is_rush_pm": is_rush_pm, "is_night": is_night,
-        "center_lat": center_lat, "center_lon": center_lon,
-        "lag_1": lag1, "lag_3": lag3, "lag_6": lag6, "lag_144": lag144,
-        "rolling_mean_3": rolling_mean_3, "rolling_mean_12": rolling_mean_12,
-    }])
+    is_night        = 1 if hour < 6 or hour >= 22 else 0
+    is_business_day = 1 if dow < 5 else 0
+    hour_sin        = np.sin(2 * np.pi * hour / 24)
+    hour_cos        = np.cos(2 * np.pi * hour / 24)
+    dow_sin         = np.sin(2 * np.pi * dow / 7)
+    dow_cos         = np.cos(2 * np.pi * dow / 7)
+
+    return np.array([
+        cluster_id,      lag1,       lag3,           lag6,        lag144,
+        is_weekend,      is_rush_am, is_rush_pm,     is_night,    is_business_day,
+        hour_sin,        hour_cos,   dow_sin,        dow_cos,     hour, dow
+    ]).reshape(1, -1)
 
 def predict_zone(cluster_id, hour, dow, lag1, lag3, lag6, lag144):
-    feat  = build_features(cluster_id, hour, dow, lag1, lag3, lag6, lag144)
-    pred  = max(0.0, float(xgb_model.predict(feat)[0]))
-    level = "Low" if pred < 5 else ("Medium" if pred < 15 else "High")
-    return round(pred, 2), level
+    X = build_features(cluster_id, hour, dow, lag1, lag3, lag6, lag144)
+    pred = max(0, round(xgb_model.predict(X)[0]))
+    if pred < 5:
+        level = "Low"
+    elif pred < 15:
+        level = "Medium"
+    else:
+        level = "High"
+    return pred, level
 
 def predict_all_zones(hour, dow, lag1, lag3, lag6, lag144):
     results = []
-    for i in range(N_ZONES):
-        feat = build_features(i, hour, dow, lag1, lag3, lag6, lag144)
-        pred = max(0.0, float(xgb_model.predict(feat)[0]))
-        results.append({"zone_id": i, "prediction": round(pred, 2),
-                        "lat": float(cluster_centers[i][0]),
-                        "lon": float(cluster_centers[i][1])})
-    results.sort(key=lambda x: x["prediction"], reverse=True)
-    return results
-
-def time_tag_html(hour):
-    if 7 <= hour <= 9:         return '<span class="time-tag time-rush">🌅 AM Rush Hour</span>'
-    if 17 <= hour <= 19:       return '<span class="time-tag time-rush">🌆 PM Rush Hour</span>'
-    if hour >= 22 or hour <= 5: return '<span class="time-tag time-night">🌙 Late Night</span>'
-    return '<span class="time-tag time-day">☀️ Daytime</span>'
-
-
-# ── Session state ─────────────────────────────────────────────────────────────
-for k, v in [("mode", None), ("result", None), ("all_results", None)]:
-    if k not in st.session_state:
-        st.session_state[k] = v
+    for zone_id in range(N_ZONES):
+        X = build_features(zone_id, hour, dow, lag1, lag3, lag6, lag144)
+        pred = max(0, round(xgb_model.predict(X)[0]))
+        results.append({
+            "zone_id": zone_id,
+            "prediction": pred,
+            "lat": float(cluster_centers[zone_id][0]),
+            "lon": float(cluster_centers[zone_id][1]),
+        })
+    return sorted(results, key=lambda x: x["prediction"], reverse=True)
 
 
 # ── Sidebar ───────────────────────────────────────────────────────────────────
 with st.sidebar:
-    st.markdown("""
-    <div class="sidebar-logo">
-        <div class="sidebar-logo-icon">🚕</div>
-        <div>
-            <div class="sidebar-logo-text">NYC Taxi Demand</div>
-            <div class="sidebar-logo-sub">ML Demand Predictor</div>
-        </div>
-    </div>
-    <div class="badge-row">
-        <span class="pill">XGBoost</span>
-        <span class="pill">R² 0.965</span>
-        <span class="pill blue">40 Zones</span>
-    </div>
-    """, unsafe_allow_html=True)
-    st.divider()
-
     st.markdown('<div class="sec-label">⏰ Time</div>', unsafe_allow_html=True)
-    hour = st.slider("Hour of day", 0, 23, 8, format="%d:00", label_visibility="collapsed")
-    st.markdown(
-        f'{time_tag_html(hour)} &nbsp;<code style="font-size:12px;background:#1e2130;'
-        f'padding:2px 8px;border-radius:6px;color:#94a3b8">{hour:02d}:00</code>',
-        unsafe_allow_html=True
-    )
-    dow = st.selectbox("Day of week", range(7), format_func=lambda x: DAYS[x], label_visibility="collapsed")
+    hour = st.slider("Hour of Day", 0, 23, 9, label_visibility="collapsed")
+    dow = st.slider("Day of Week", 0, 6, 0, format_option=lambda x: DAYS[x], label_visibility="collapsed")
 
     st.markdown('<div class="sec-label">📍 Zone</div>', unsafe_allow_html=True)
     cluster_id = st.slider("Cluster ID", 0, N_ZONES - 1, 0, label_visibility="collapsed")
