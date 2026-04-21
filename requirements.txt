@@ -1,10 +1,6 @@
-
+streamlit
+pydeck
 xgboost
-lightgbm
 scikit-learn==1.6.1
 pandas
 numpy
-fastapi
-uvicorn
-xgboost
-python-multipart

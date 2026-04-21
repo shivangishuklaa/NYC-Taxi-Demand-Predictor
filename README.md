@@ -1,18 +1,18 @@
-# 🚕 Newyork Taxi Demand Prediction
+# 🚕 New York City Taxi Demand Prediction
 
 > Predicting yellow cab pickup demand per 10-minute bin per zone across New York City — trained on Jan 2015, evaluated on Jan 2016.
 
 ![Python](https://img.shields.io/badge/Python-3.12-blue?style=flat-square)
 ![XGBoost](https://img.shields.io/badge/XGBoost-3.2-green?style=flat-square)
-![FastAPI](https://img.shields.io/badge/FastAPI-0.11-teal?style=flat-square)
+![Streamlit](https://img.shields.io/badge/Streamlit-1.x-FF4B4B?style=flat-square)
 ![R2](https://img.shields.io/badge/R²-0.965-brightgreen?style=flat-square)
-
-
-## 🌐 Live Demo
-👉 https://nyc-taxi-demand-predictor.onrender.com
 
 ---
 
+## 🌐 Live Demo
+👉 [nyc-taxi-demand-predictor.streamlit.app](https://nyc-taxi-demand-predictor.streamlit.app)
+
+---
 
 ## 📌 Problem Statement
 
@@ -51,9 +51,9 @@ Feature Engineering (16 features — temporal + lag + geospatial)
     ↓
 Model Training (7 models compared)
     ↓
-Best Model: XGBoost
+Best Model: XGBoost (R² = 0.965)
     ↓
-Deployment (FastAPI + Interactive Map UI)
+Deployment (Streamlit + Interactive Pydeck Map)
 ```
 
 ---
@@ -63,12 +63,12 @@ Deployment (FastAPI + Interactive Map UI)
 | Feature | Description |
 |---|---|
 | `hour_of_day` | 0–23 |
-| `day_of_week` | 0=Mon, 6=Sun |
-| `is_weekend` | 1 if Sat/Sun |
+| `day_of_week` | 0 = Monday, 6 = Sunday |
+| `is_weekend` | 1 if Saturday or Sunday |
 | `is_rush_am` | 1 if 7–9 AM |
 | `is_rush_pm` | 1 if 5–7 PM |
-| `is_night` | 1 if 10 PM–5 AM |
-| `center_lat/lon` | Zone cluster center coordinates |
+| `is_night` | 1 if 10 PM – 5 AM |
+| `center_lat / center_lon` | Zone cluster center coordinates |
 | `lag_1` | Pickups 10 min ago |
 | `lag_3` | Pickups 30 min ago |
 | `lag_6` | Pickups 1 hr ago |
@@ -104,7 +104,7 @@ Key findings:
 
 ### 1. Clone the repo
 ```bash
-git clone https://github.com/yourusername/nyc-taxi-demand-prediction.git
+git clone https://github.com/shivangishuklaa/nyc-taxi-demand-prediction.git
 cd nyc-taxi-demand-prediction
 ```
 
@@ -134,53 +134,27 @@ models/
 └── kmeans_zones.pkl
 ```
 
-> To train models from scratch, run the notebook in Google Colab: `notebook/NY_Taxi_Demand_Prediction.ipynb`
+> To train models from scratch, run the Colab notebook: `notebook/NY_Taxi_Demand_Prediction.ipynb`
 
 ### 5. Run the app
 ```bash
-uvicorn app:app --reload
+streamlit run app.py
 ```
 
-Open → `http://127.0.0.1:8000`
+Open → `http://localhost:8501`
 
 ---
 
-## 🌐 API Endpoints
+## 🖥️ App Features
 
-| Method | Endpoint | Description |
-|---|---|---|
-| GET | `/` | Frontend UI |
-| GET | `/zones` | All 40 zone centers (lat/lon) |
-| POST | `/predict` | Predict demand for one zone |
-| POST | `/predict-all` | Predict demand for all 40 zones |
-
-### Example request
-```bash
-curl -X POST "http://127.0.0.1:8000/predict" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "cluster_id": 4,
-    "hour_of_day": 8,
-    "day_of_week": 0,
-    "lag_1": 10,
-    "lag_3": 9,
-    "lag_6": 8,
-    "lag_144": 12
-  }'
-```
-
-### Example response
-```json
-{
-  "zone_id": 4,
-  "hour": 8,
-  "day": 0,
-  "prediction": 18.45,
-  "level": "High",
-  "lat": 40.7489,
-  "lon": -73.9680
-}
-```
+| Feature | Description |
+|---|---|
+| **Predict this zone** | Predicts taxi pickups for a selected zone, hour, and day |
+| **Predict all 40 zones** | Runs predictions for all zones simultaneously |
+| **Interactive map** | Pydeck map with color-coded demand circles (green → red) |
+| **Top 5 zones** | Bar-ranked list of highest demand zones |
+| **Summary stats** | Total pickups, peak zone, and average per zone |
+| **Lag inputs** | Manually set recent pickup counts for realistic prediction |
 
 ---
 
@@ -188,11 +162,10 @@ curl -X POST "http://127.0.0.1:8000/predict" \
 
 ```
 nyc-taxi-demand-prediction/
-├── main.py                  ← FastAPI backend
+├── app.py                          ← Streamlit app
 ├── requirements.txt
-├── static/
-│   └── index.html          ← Frontend UI
-├── models/                 ← Trained pkl files (not tracked by git)
+├── .gitignore
+├── models/                         ← Trained pkl files (not tracked by git)
 │   ├── xgb_model.pkl
 │   ├── lgbm_model.pkl
 │   ├── rf_model.pkl
@@ -210,14 +183,14 @@ nyc-taxi-demand-prediction/
 |---|---|
 | Data processing | Dask, Pandas, NumPy |
 | ML models | XGBoost, LightGBM, Scikit-learn |
-| Geo-clustering | MiniBatchKMeans, gpxpy (Haversine) |
-| Backend | FastAPI, Uvicorn |
-| Frontend | HTML, CSS, Leaflet.js |
-| Visualization | Matplotlib, Seaborn, Folium |
+| Geo-clustering | MiniBatchKMeans |
+| App framework | Streamlit |
+| Map visualization | Pydeck (deck.gl) |
+| Notebook | Google Colab |
 
 ---
 
 ## 👩‍💻 Author
 
-Made  by **Shivangi Shukla**  
+Made by **Shivangi Shukla**  
 [GitHub](https://github.com/shivangishuklaa) · [LinkedIn](https://www.linkedin.com/in/shivangi-shukla-data-analyst/)

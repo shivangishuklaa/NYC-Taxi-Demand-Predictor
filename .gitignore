@@ -2,8 +2,11 @@
 venv/
 env/
 
-# Trained models (large files)
+# Trained models (large files — not tracked by git)
+models/xgb_model.pkl
+models/lgbm_model.pkl
 models/rf_model.pkl
+models/kmeans_zones.pkl
 
 # Jupyter checkpoints
 .ipynb_checkpoints/
@@ -21,3 +24,6 @@ Thumbs.db
 # IDE
 .vscode/
 .idea/
+
+# Streamlit secrets / config
+.streamlit/secrets.toml
