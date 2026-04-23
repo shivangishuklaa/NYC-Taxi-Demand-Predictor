@@ -10,7 +10,7 @@
 ---
 
 ## 🌐 Live Demo
-👉 [nyc-taxi-demand-predictor.streamlit.app](https://nyc-taxi-demand-predictor.streamlit.app)
+👉 [nyc-taxi-demand-predictor.streamlit.app](https://nyc-taxi-demand-predictor.onrender.com)
 
 ---
 
